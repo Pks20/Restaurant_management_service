@@ -2,10 +2,10 @@ package com.Restaurant_management_service.Restaurant_management_service.service;
 
 import com.Restaurant_management_service.Restaurant_management_service.model.AuthenticationToken;
 import com.Restaurant_management_service.Restaurant_management_service.model.User;
+import com.Restaurant_management_service.Restaurant_management_service.model.UserType;
 import com.Restaurant_management_service.Restaurant_management_service.model.dto.SignInInput;
 import com.Restaurant_management_service.Restaurant_management_service.model.dto.SignUpOutput;
 import com.Restaurant_management_service.Restaurant_management_service.repository.IAuthTokenRepo;
-import com.Restaurant_management_service.Restaurant_management_service.repository.IOrederRepo;
 import com.Restaurant_management_service.Restaurant_management_service.repository.IUserRepo;
 import com.Restaurant_management_service.Restaurant_management_service.service.utility.emailUtility.EmailHandler;
 import com.Restaurant_management_service.Restaurant_management_service.service.utility.hashingUtility.PasswordEncrypter;
@@ -16,18 +16,11 @@ import java.util.List;
 @Service
 public class UserService {
     @Autowired
-    IUserRepo userRepo;
-
+    IUserRepo iUserRepo;
     @Autowired
-    IOrederRepo orderRepo;
-
-    @Autowired
-    IAuthTokenRepo authTokenRepo;
-
-
+    IAuthTokenRepo iAuthTokenRepo;
 
     public SignUpOutput signUpUser(User user) {
-
         boolean signUpStatus = true;
         String signUpStatusMessage = null;
 
@@ -39,9 +32,19 @@ public class UserService {
             signUpStatus = false;
             return new SignUpOutput(signUpStatus,signUpStatusMessage);
         }
+        UserType type = user.getUserType();
+        if(type == UserType.Admin && !newEmail.endsWith(("@admin.com")))
+        {
+            throw new IllegalArgumentException("Invalid email format for admin");
+        }
+        else if(type == UserType.Normal_User && !newEmail.endsWith(("@gmail.com")))
+        {
+            throw new IllegalArgumentException("Invalid email format for Normal User");
+        }
+
 
         //check if this user email already exists ??
-        User existingUser = userRepo.findFirstByUserEmail(newEmail);
+        User existingUser = iUserRepo.findFirstByUserEmail(newEmail);
 
         if(existingUser != null)
         {
@@ -54,10 +57,10 @@ public class UserService {
         try {
             String encryptedPassword = PasswordEncrypter.encryptPassword(user.getUserPassword());
 
-
+            //save the User with the new encrypted password
 
             user.setUserPassword(encryptedPassword);
-            userRepo.save(user);
+            iUserRepo.save(user);
 
             return new SignUpOutput(signUpStatus, "User registered successfully!!!");
         }
@@ -68,14 +71,16 @@ public class UserService {
             return new SignUpOutput(signUpStatus,signUpStatusMessage);
         }
     }
-
-    public List<User> getAllUser() {
-        return userRepo.findAll();
+    public User findByUserEmail(String email)
+    {
+        return iUserRepo.findByUserEmail(email);
     }
 
+    public List<User> getAllUsers() {
+        return iUserRepo.findAll();
+    }
 
-    public String signInUser(SignInInput signInInput) {
-
+    public String sigInUser(SignInInput signInInput) {
 
         String signInStatusMessage = null;
 
@@ -85,12 +90,9 @@ public class UserService {
         {
             signInStatusMessage = "Invalid email";
             return signInStatusMessage;
-
-
         }
 
-        //check if this email already exists ??
-        User existingUser = userRepo.findFirstByUserEmail(signInEmail);
+        User existingUser = iUserRepo.findFirstByUserEmail(signInEmail);
 
         if(existingUser == null)
         {
@@ -108,7 +110,7 @@ public class UserService {
             {
                 //session should be created since password matched and user id is valid
                 AuthenticationToken authToken  = new AuthenticationToken(existingUser);
-                authTokenRepo.save(authToken);
+                iAuthTokenRepo.save(authToken);
 
                 EmailHandler.sendEmail(signInEmail,"email testing",authToken.getTokenValue());
                 return "Token sent to your email";
@@ -126,18 +128,9 @@ public class UserService {
 
     }
 
-
-
-
-
-
-
-    public String sigOutUser(String email) {
-
-        User user = userRepo.findFirstByUserEmail(email);
-        authTokenRepo.delete(authTokenRepo.findFirstByUser(user));
-        return "User Signed out successfully";
+    public String deleteUser(Integer Id) {
+        iUserRepo.deleteById(Id);
+        return "User Deleted Succesfully";
     }
-
 
 }

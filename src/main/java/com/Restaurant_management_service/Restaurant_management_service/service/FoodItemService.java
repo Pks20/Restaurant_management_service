@@ -1,9 +1,9 @@
 package com.Restaurant_management_service.Restaurant_management_service.service;
 
-import com.Restaurant_management_service.Restaurant_management_service.model.Order;
+import com.Restaurant_management_service.Restaurant_management_service.model.FoodItem;
 import com.Restaurant_management_service.Restaurant_management_service.model.User;
 import com.Restaurant_management_service.Restaurant_management_service.model.UserType;
-import com.Restaurant_management_service.Restaurant_management_service.repository.IOrderRepo;
+import com.Restaurant_management_service.Restaurant_management_service.repository.IFoodItemRepo;
 import com.Restaurant_management_service.Restaurant_management_service.repository.IUserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,29 +11,30 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class OrderService {
+public class FoodItemService {
     @Autowired
-    IOrderRepo iOrderRepo;
+    IFoodItemRepo iFoodItemRepo;
+
     @Autowired
     IUserRepo iUserRepo;
 
-    public Order generateFoodOrder(Order order, Integer userId) {
+    public FoodItem createFoodItem(FoodItem foodItem, Integer userId) {
+
+        // Check if the user is an admin
         User user = iUserRepo.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         String newEmail = user.getUserEmail();
         UserType type = user.getUserType();
-        if(!type.equals(UserType.Normal_User) && !newEmail.endsWith(("@gmail.com"))){
-            throw new IllegalArgumentException("Only Normal User can generate food Order");
+        if(!type.equals(UserType.Admin) && !newEmail.endsWith(("@admin.com"))){
+            throw new IllegalArgumentException("Only admins can create food items");
         }
 
         // Create the food item
-        return iOrderRepo.save(order);
+        return iFoodItemRepo.save(foodItem);
     }
 
-    public List<Order> getAllOrders() {
-        return iOrderRepo.findAll();
+    public List<FoodItem> getAllFoodItems() {
+        return iFoodItemRepo.findAll();
     }
-
-
 }

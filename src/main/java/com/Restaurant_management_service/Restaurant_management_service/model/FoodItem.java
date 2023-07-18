@@ -9,14 +9,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Entity
 public class FoodItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long foodId;
+    private Integer foodItemID;
     private String title;
     private String description;
-    private Double FoodPrice;
+    private Integer price;
 }

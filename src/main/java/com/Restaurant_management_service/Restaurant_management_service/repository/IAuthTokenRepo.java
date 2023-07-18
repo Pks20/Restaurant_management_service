@@ -4,8 +4,6 @@ import com.Restaurant_management_service.Restaurant_management_service.model.Aut
 import com.Restaurant_management_service.Restaurant_management_service.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface IAuthTokenRepo extends JpaRepository<AuthenticationToken,Long> {
-    AuthenticationToken findFirstByTokenValue(String authTokenValue);
+public interface IAuthTokenRepo extends JpaRepository<AuthenticationToken,Integer> {
 
-    AuthenticationToken findFirstByUser(User user);
 }
